@@ -6,7 +6,7 @@ import subprocess
 from datetime import datetime
 
 # Set your repo path
-REPO_PATH = "./test"
+REPO_PATH = subprocess.run("pwd", capture_output=True, text=True).stdout.strip()
 BRANCH = "dev"
 
 def generate_random_text():
