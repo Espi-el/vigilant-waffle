@@ -1,5 +1,5 @@
 # CAPABILITY: Main API interface for DiffMem - module-driven memory operations
-# INPUTS: repo_path, user_id, openrouter_api_key for initialization
+# INPUTS: repo_path, user_id, openai_api_key for initialization
 # OUTPUTS: Structured memory operations via DiffMemory class
 # CONSTRAINTS: No servers/endpoints - direct import and use in chat agents
 
@@ -28,7 +28,7 @@ class DiffMemory:
     Can be imported directly into chat agents for immediate use.
     
     Usage:
-        memory = DiffMemory("/path/to/repo", "alex", "your-openrouter-key")
+        memory = DiffMemory("/path/to/repo", "alex", "your-openai-key")
         
         # Read operations
         context = memory.get_context(conversation, depth="basic")
@@ -39,21 +39,21 @@ class DiffMemory:
         memory.commit_session("session-123")
     """
     
-    def __init__(self, repo_path: str, user_id: str, openrouter_api_key: str, 
-                 model: str = "google/gemini-2.5-pro", auto_onboard: bool = False):
+    def __init__(self, repo_path: str, user_id: str, openai_api_key: str, 
+                 model: str = "gpt-4o-mini", auto_onboard: bool = False):
         """
         Initialize DiffMemory for a specific user and repository.
         
         Args:
             repo_path: Path to the git repository containing memory files
             user_id: User identifier (must exist in users/ directory unless auto_onboard=True)
-            openrouter_api_key: API key for OpenRouter LLM access
+            openai_api_key: API key for openai LLM access
             model: Default model for LLM operations
             auto_onboard: If True, will create user structure if it doesn't exist
         """
         self.repo_path = Path(repo_path)
         self.user_id = user_id
-        self.openrouter_api_key = openrouter_api_key
+        self.openai_api_key = openai_api_key
         self.model = model
         
         # Validate paths
@@ -79,7 +79,7 @@ class DiffMemory:
             self._context_manager = ContextManager(
                 str(self.repo_path), 
                 self.user_id, 
-                self.openrouter_api_key,
+                self.openai_api_key,
                 self.model
             )
         return self._context_manager
@@ -91,7 +91,7 @@ class DiffMemory:
             self._writer_agent = WriterAgent(
                 str(self.repo_path),
                 self.user_id,
-                self.openrouter_api_key,
+                self.openai_api_key,
                 self.model
             )
         return self._writer_agent
@@ -140,7 +140,7 @@ class DiffMemory:
         onboarding_agent = OnboardingAgent(
             str(self.repo_path),
             self.user_id,
-            self.openrouter_api_key,
+            self.openai_api_key,
             self.model
         )
         
@@ -370,8 +370,8 @@ class DiffMemory:
             warnings.append("No timeline directory found - will be created on first timeline entry")
         
         # Validate API key
-        if not self.openrouter_api_key:
-            issues.append("No OpenRouter API key provided")
+        if not self.openai_api_key:
+            issues.append("No openai API key provided")
         
         return {
             'valid': len(issues) == 0,
@@ -386,8 +386,8 @@ class DiffMemory:
 # Convenience functions for quick access
 
 def create_memory_interface(repo_path: str, user_id: str, 
-                          openrouter_api_key: str = None,
-                          model: str = "google/gemini-2.5-pro",
+                          openai_api_key: str = None,
+                          model: str = "gpt-4o-mini",
                           auto_onboard: bool = False) -> DiffMemory:
     """
     Convenience function to create a DiffMemory interface.
@@ -395,23 +395,23 @@ def create_memory_interface(repo_path: str, user_id: str,
     Args:
         repo_path: Path to memory repository
         user_id: User identifier
-        openrouter_api_key: API key, or None to use OPENROUTER_API_KEY env var
+        openai_api_key: API key, or None to use openai_API_KEY env var
         model: Default model for operations
         auto_onboard: If True, will allow initialization even if user doesn't exist
         
     Returns:
         Configured DiffMemory instance
     """
-    if openrouter_api_key is None:
-        openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
-        if not openrouter_api_key:
-            raise ValueError("OpenRouter API key must be provided or set in OPENROUTER_API_KEY env var")
+    if openai_api_key is None:
+        openai_api_key = os.getenv("openai_API_KEY")
+        if not openai_api_key:
+            raise ValueError("openai API key must be provided or set in openai_API_KEY env var")
     
-    return DiffMemory(repo_path, user_id, openrouter_api_key, model, auto_onboard)
+    return DiffMemory(repo_path, user_id, openai_api_key, model, auto_onboard)
 
 
 def onboard_new_user(repo_path: str, user_id: str, user_info: str,
-                    openrouter_api_key: str = None, 
+                    openai_api_key: str = None, 
                     model: str = "google/gemini-2.5-pro",
                     session_id: str = None) -> Dict[str, Any]:
     """
@@ -421,20 +421,20 @@ def onboard_new_user(repo_path: str, user_id: str, user_info: str,
         repo_path: Path to memory repository
         user_id: New user identifier
         user_info: Raw information dump about the user
-        openrouter_api_key: API key, or None to use OPENROUTER_API_KEY env var
+        openai_api_key: API key, or None to use openai_API_KEY env var
         model: Model to use for onboarding
         session_id: Optional session ID for tracking
         
     Returns:
         Dict with onboarding results
     """
-    if openrouter_api_key is None:
-        openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
-        if not openrouter_api_key:
-            raise ValueError("OpenRouter API key must be provided or set in OPENROUTER_API_KEY env var")
+    if openai_api_key is None:
+        openai_api_key = os.getenv("openai_API_KEY")
+        if not openai_api_key:
+            raise ValueError("openai API key must be provided or set in openai_API_KEY env var")
     
     # Create memory interface with auto_onboard to allow initialization
-    memory = DiffMemory(repo_path, user_id, openrouter_api_key, model, auto_onboard=True)
+    memory = DiffMemory(repo_path, user_id, openai_api_key, model, auto_onboard=True)
     
     # Perform onboarding
     return memory.onboard_user(user_info, session_id)
