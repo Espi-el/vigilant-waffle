@@ -19,8 +19,8 @@ if 'OPENAI_API_KEY' not in os.environ:
 model = os.getenv('MODEL_CHOICE', 'gpt-4o-mini')
 
 conversations = flatten_conversations("conversations.json")
-memory = DiffMemory("/path/to/repo", "sean", "your-openai-key")
-
+# memory = DiffMemory("/path/to/repo", "sean", "your-openai-key")
+memory = DiffMemory("./assistant/users/anna", "anna", os.getenv('OPENAI_API_KEY'))
 # Streamlit page configuration
 st.set_page_config(
     page_title="Personal Assistant",
@@ -32,7 +32,7 @@ st.set_page_config(
 def get_openai_client():
     return OpenAI()
 
-openai_client = get_openai_client()
+# openai_client = get_openai_client()
 
 
 # Initialize session state for messages

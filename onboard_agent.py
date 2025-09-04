@@ -15,7 +15,7 @@ from openai import OpenAI
 class OnboardingAgent:
     """Handles initial user setup and directory structure creation."""
     
-    def __init__(self, repo_path: str, user_id: str, openrouter_api_key: str, model: str = "google/gemini-2.5-pro"):
+    def __init__(self, repo_path: str, user_id: str, openai_api_key: str, model: str = "google/gemini-2.5-pro"):
         self.repo_path = Path(repo_path)
         self.user_id = user_id
         self.user_path = self.repo_path / "users" / user_id
@@ -23,15 +23,15 @@ class OnboardingAgent:
         self.memories_path = self.user_path / "memories"
         self.timeline_path = self.user_path / "timeline"
         self.prompts_path = Path(__file__).parent / "prompts"
-        self.openrouter_api_key = openrouter_api_key
+        self.openai_api_key = openai_api_key
         self.model = model
         self.repo = git.Repo(self.repo_path)
-        
-        self.client = OpenAI(  
-            base_url="https://openrouter.ai/api/v1",  
-            api_key=openrouter_api_key,  
-        ) 
-        
+
+        self.client = OpenAI(
+            base_url="https://api.openai.com/v1",
+            api_key=openai_api_key,
+        )
+
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
         self.logger = logging.getLogger(__name__)
     

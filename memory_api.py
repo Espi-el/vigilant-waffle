@@ -412,7 +412,7 @@ def create_memory_interface(repo_path: str, user_id: str,
 
 def onboard_new_user(repo_path: str, user_id: str, user_info: str,
                     openai_api_key: str = None, 
-                    model: str = "google/gemini-2.5-pro",
+                    model: str = "gpt-4o-mini",
                     session_id: str = None) -> Dict[str, Any]:
     """
     Onboard a completely new user to the memory system.

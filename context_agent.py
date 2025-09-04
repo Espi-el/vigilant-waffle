@@ -206,7 +206,7 @@ class SemanticEntityScorer:
 class ContextManager:
     """Orchestrates memory retrieval and context assembly for chat agents"""
     
-    def __init__(self, repo_path: str, user_id: str, openrouter_api_key: str, model: str = "openai/gpt-4o"):
+    def __init__(self, repo_path: str, user_id: str, openai_api_key: str, model: str = "openai/gpt-4o"):
 
         self.repo_path = Path(repo_path)  
         self.user_id = user_id  
@@ -221,7 +221,7 @@ class ContextManager:
             raise FileNotFoundError(f"User file not found: {self.user_file}")
         
         self.repo = git.Repo(self.repo_path)  
-        self.openrouter_api_key = openrouter_api_key
+        self.openai_api_key = openai_api_key
         self.model = model
         
         # Initialize BM25 index (rebuild on start)

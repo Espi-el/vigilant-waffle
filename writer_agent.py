@@ -3,7 +3,7 @@
 # CAPABILITY: Process session transcripts to create and update memory files, staging all changes.  
 # INPUTS: Memory input (str), user_id (str), repo_path (str)  
 # OUTPUTS: Staged file changes in the Git working directory.  
-# CONSTRAINTS: Uses OpenRouter via OpenAI lib. Prompts are abstracted to files.  
+# CONSTRAINTS: Uses OpenRouter via OpenAI lib. Prompts are abstracted to files.  ### Using Base OpenAI instead, may have to fix
 
 import git  
 import json  
@@ -17,7 +17,7 @@ from openai import OpenAI
 class WriterAgent:  
     """Orchestrates the process of updating memory files based on a session."""  
 
-    def __init__(self, repo_path: str, user_id: str, openrouter_api_key: str, model: str = "anthropic/claude-3-haiku"):  
+    def __init__(self, repo_path: str, user_id: str, openai_api_key: str, model: str = "anthropic/claude-3-haiku"):  
         self.repo_path = Path(repo_path)  
         self.user_id = user_id  
         self.user_path = self.repo_path / "users" / user_id  
@@ -33,8 +33,8 @@ class WriterAgent:
         self.repo = git.Repo(self.repo_path)  
         self.model = model  
         self.client = OpenAI(  
-            base_url="https://openrouter.ai/api/v1",  
-            api_key=openrouter_api_key,  
+            base_url="https://api.openai.com/api/v1",  
+            api_key=openai_api_key,  
         )  
         
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')  
@@ -47,7 +47,7 @@ class WriterAgent:
             return f.read()  
 
     def _call_llm(self, system_prompt: str, prompt: str, is_json: bool = True, model = None) -> Any:  
-        """Calls the LLM via OpenRouter, enforcing JSON mode if requested."""  
+        """Calls the LLM via OpenAI, enforcing JSON mode if requested."""  
         messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}]
         if model == None:
             model = self.model

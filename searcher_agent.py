@@ -1,4 +1,4 @@
-# CAPABILITY: LLM-orchestrated search over BM25 index via OpenRouter  
+# CAPABILITY: LLM-orchestrated search over BM25 index via OpenAI 
 # INPUTS: Session pairs (List[Dict[str, str]] e.g., [{'role': 'user', 'content': msg}, {'role': 'assistant', 'content': resp}]), index (Dict), model (str)  
 # OUTPUTS: Dict with synthesized response, confidence, snippets  
 # CONSTRAINTS: PoC minimal—distill query from conversation; up to 2 iterations; env-based API key  
@@ -9,7 +9,7 @@ import os
 import json  
 import re  
 from typing import Dict, List  
-from diffmem.bm25_indexer.api import search
+from indexer import search
 
 # Structured logging for agent perception  
 import logging  
@@ -20,15 +20,15 @@ logger = logging.getLogger(__name__)
 from dotenv import load_dotenv
 load_dotenv()
 
-# OpenRouter config
-OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"  
-API_KEY = os.getenv("OPENROUTER_API_KEY")  
+# OpenAI config
+OPENAI_API_URL = "https://api.openai.com/v1/chat/completions" 
+API_KEY = os.getenv('OPENAI_API_KEY')  
 if not API_KEY:  
-    raise ValueError("OPENROUTER_API_KEY not set in environment")  
+    raise ValueError("OPENAI_API_KEY not set in environment")  
 
 def llm_call(messages: List[Dict[str, str]], model: str, max_tokens: int = 500, json: bool = True) -> str:  
     """  
-    Calls OpenRouter API with messages.
+    Calls OpenAI API with messages.
     """  
     headers = {  
         "Authorization": f"Bearer {API_KEY}",  
@@ -45,7 +45,7 @@ def llm_call(messages: List[Dict[str, str]], model: str, max_tokens: int = 500, 
         payload["response_format"] = { "type": "json_object"}
     
     try:  
-        response = requests.post(OPENROUTER_API_URL, headers=headers, json=payload)  
+        response = requests.post(OPENAI_API_URL, headers=headers, json=payload)  
         response.raise_for_status()  
         content = response.json()["choices"][0]["message"]["content"]  
         logger.info(f"LLM_CALL: model={model} tokens_in={sum(len(m['content'].split()) for m in messages)} response_length={len(content)}")  
