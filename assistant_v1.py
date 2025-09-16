@@ -21,3 +21,6 @@ model = os.getenv('MODEL_CHOICE', 'gpt-4o-mini')
 # exported_conversations = flatten_conversations("conversations.json")
 
 memory = DiffMemory("./assistant/", "anna", os.getenv('OPENAI_API_KEY'))
+
+# Purpose of this file is to run the streamlit command normally run in the tuerminal
+# among other potential future uses

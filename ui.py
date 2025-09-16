@@ -2,6 +2,23 @@ import streamlit as st
 from openai import OpenAI
 import os
 import json
+from memory_api import DiffMemory
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+if 'OPENAI_API_KEY' not in os.environ:
+    raise RuntimeError("OPENAI_API_KEY environment variable is required. Please set it in your .env file.")
+model = os.getenv('MODEL_CHOICE', 'gpt-4o-mini')
+
+# exported_conversations = flatten_conversations("conversations.json")
+memory = DiffMemory("./assistant/", "anna", os.getenv('OPENAI_API_KEY'))
+repo_status = memory.get_repo_status()
+anna_entity = memory.get_user_entity()
+timeline = memory.get_recent_timeline()
+context = memory.get_context(anna_entity)
+git_memory = memory.orchestrated_search(context)
 
 # Streamlit page configuration
 st.set_page_config(
@@ -17,23 +34,10 @@ if "messages" not in st.session_state:
 
 # Set up OpenAI client
 openai_api_key = os.getenv("OPENAI_API_KEY")
+print(os.getenv("OPENAI_API_KEY"))
 client = OpenAI(api_key=openai_api_key)
 
 st.title("My Name Is Anna")
-
-# Sidebar UI
-with st.sidebar:
-    st.title("Personal Assistant")
-    st.markdown("""
-    **Welcome!**
-    This is my personal assistant powered by OpenAI.
-    """)
-
-    st.divider()
-    st.subheader("Chat History (dict format)")
-    st.divider()
-    # Display chat history as a list of dicts
-    st.json(st.session_state.messages)
 
 # Main chat interface
 user_input = st.chat_input("What's on your mind?")
@@ -60,8 +64,29 @@ if user_input:
     # Add assistant message
     st.session_state.messages.append({"role": "assistant", "content": assistant_reply})
 
-# Display conversation in main panel
-for message in st.session_state.messages:
-    avatar = role_icons.get(message["role"], "")
-    with st.chat_message(message["role"], avatar=avatar):
-        st.write(message["content"])
+    # Display conversation in main panel
+    for message in st.session_state.messages:
+        avatar = role_icons.get(message["role"], "")
+        with st.chat_message(message["role"], avatar=avatar):
+            st.write(message["content"])
+
+# Sidebar UI
+with st.sidebar:
+    st.title("Personal Assistant")
+    st.markdown("""
+    **Welcome!**
+    This is my personal assistant powered by OpenAI.
+    """)
+    # st.write(repo_status) #add optional show button
+    # st.write(anna_entity)
+    # st.write(timeline)
+    st.write(context)
+    st.write(git_memory)
+    
+    st.divider()
+    # st.subheader("Chat History (dict format)")
+    st.divider()
+    # Display chat history as a list of dicts
+    # if user_input:
+    #     for idx in st.json(st.session_state.messages):
+    #         st.json(st.session_state.

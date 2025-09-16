@@ -3,6 +3,7 @@
 # OUTPUTS: Structured memory operations via DiffMemory class
 # CONSTRAINTS: No servers/endpoints - direct import and use in chat agents
 
+from dotenv import load_dotenv
 import os
 import logging
 from pathlib import Path
@@ -18,6 +19,8 @@ from searcher_agent import orchestrate_query
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
 
 
 class DiffMemory:
@@ -195,6 +198,7 @@ class DiffMemory:
         """
         return search(self.bm25_index, query, k)
     
+    
     def orchestrated_search(self, conversation: List[Dict[str, str]], 
                            model: str = None, k: int = 5) -> Dict[str, Any]:
         """
@@ -246,7 +250,7 @@ class DiffMemory:
         Process a session transcript and stage memory updates.
         
         This analyzes the input, creates/updates entity files, and stages all changes
-        in git working directory. No commit is made until commit_session() is called.
+        in git work ing directory. No commit is made until commit_session() is called.
         
         Args:
             memory_input: Raw session transcript or memory content
