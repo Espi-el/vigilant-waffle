@@ -33,7 +33,7 @@ class WriterAgent:
         self.repo = git.Repo(self.repo_path)  
         self.model = model  
         self.client = OpenAI(  
-            base_url="https://api.openai.com/api/v1",  
+            base_url="https://api.openai.com/v1",  
             api_key=openai_api_key,  
         )  
         
@@ -99,10 +99,26 @@ class WriterAgent:
             
         self.logger.info(f"Creating {len(entities_to_create)} new entity files...")
       
-        # Use the main user file as the example
+        # Use the main user file as the example, handle missing folder
         example_file_path = self.user_file
-        with open(example_file_path, 'r', encoding='utf-8') as f:
-            example_content = f.read()
+        try:
+            with open(example_file_path, 'r', encoding='utf-8') as f:
+                example_content = f.read()
+        except FileNotFoundError as e:
+            import errno
+            if e.errno == errno.ENOENT:
+                # Create the parent folder if missing, then retry
+                example_file_path.parent.mkdir(parents=True, exist_ok=True)
+                self.logger.warning(f"Created missing folder: {example_file_path.parent}")
+                # Optionally, create an empty user file if it doesn't exist
+                if not example_file_path.exists():
+                    with open(example_file_path, 'w', encoding='utf-8') as f:
+                        f.write("")
+                    self.logger.warning(f"Created missing user file: {example_file_path}")
+                with open(example_file_path, 'r', encoding='utf-8') as f:
+                    example_content = f.read()
+            else:
+                raise
 
         system_prompt = self._load_prompt("0_system")
         
@@ -115,19 +131,36 @@ class WriterAgent:
                 entity_summary=entity['summary'],
                 memory_input=memory_input
             )
-            
+
             new_file_content = self._call_llm(system_prompt, creation_prompt, is_json=False)
-            
+
             # Create memories subdirectories if they don't exist
             folder = entity['type']
             target_dir = self.memories_path / folder
             target_dir.mkdir(parents=True, exist_ok=True)
-            
+
             file_name = entity['name'].lower().replace(' ', '_').replace('.', '') + '.md'
             new_file_path = target_dir / file_name
-            with open(new_file_path, 'w', encoding='utf-8') as f:
-                f.write(new_file_content)
-            self.logger.info(f"ENTITY_CREATED: Staged new file at {new_file_path}")
+            try:
+                with open(new_file_path, 'w', encoding='utf-8') as f:
+                    f.write(new_file_content)
+                self.logger.info(f"ENTITY_CREATED: Staged new file at {new_file_path}")
+            except FileNotFoundError as e:
+                import errno
+                if e.errno == errno.ENOENT:
+                    # Create the parent folder if missing, then retry
+                    new_file_path.parent.mkdir(parents=True, exist_ok=True)
+                    self.logger.warning(f"Created missing folder: {new_file_path.parent}")
+                    # Optionally, create an empty file if it doesn't exist
+                    if not new_file_path.exists():
+                        with open(new_file_path, 'w', encoding='utf-8') as f:
+                            f.write("")
+                        self.logger.warning(f"Created missing entity file: {new_file_path}")
+                    with open(new_file_path, 'w', encoding='utf-8') as f:
+                        f.write(new_file_content)
+                    self.logger.info(f"ENTITY_CREATED: Staged new file at {new_file_path}")
+                else:
+                    raise
 
     def _find_text_position(self, content: str, search_text: str, fuzzy: bool = True) -> int:
         """Finds the position of search_text in content, with optional fuzzy matching.

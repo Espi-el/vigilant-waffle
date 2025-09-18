@@ -38,7 +38,7 @@ def summarize_text(text, client):
                 )
             }
         ],
-        temperature=0.6  # Slightly higher for liveliness
+        temperature=1  # Slightly higher for liveliness
     )
     return response.choices[0].message.content
 
@@ -87,10 +87,10 @@ def main():
         raise RuntimeError("OPENAI_API_KEY environment variable is required. Please set it in your .env file.")
     model = os.getenv('MODEL_CHOICE', 'gpt-5-nano')
     client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-    conversations = load_and_flatten_conversations("./test/conversations.json")
-    daily_conversations = group_conversations_by_date(conversations)
-    progress_filename = f"daily_summaries_progress_{int(time.time())}.json"
-    summarize_conversations(daily_conversations, client, progress_filename)
+    # conversations = load_and_flatten_conversations("./test/conversations.json")
+    # daily_conversations = group_conversations_by_date(conversations)
+    # progress_filename = f"daily_summaries_progress_{int(time.time())}.json"
+    # summarize_conversations(daily_conversations, client, progress_filename)
 
 if __name__ == "__main__":
     main()
@@ -104,6 +104,7 @@ if 'OPENAI_API_KEY' not in os.environ:
 
 model = os.getenv('MODEL_CHOICE', 'gpt-5-nano')
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+memory = DiffMemory("./assistant/", "anna", os.getenv('OPENAI_API_KEY'))
 
 # exported_conversations = flatten_conversations("conversations.json")
 
@@ -113,24 +114,21 @@ client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 # among other potential future uses
 # like generating memory block entities from exports
 
-conversations = flatten_conversations("./test/conversations.json")
-daily_conversations = {}
-for conv in conversations:
-    ts = conv.get("create_time")
-    date = str(datetime.fromisoformat(ts).date())
-    if date not in daily_conversations:
-        daily_conversations[date] = {
-            "title": conv.get("title", f"Session {date}"),
-            "messages": []
-        }
-    # Append each message from the flattened messages list
-    for idx, msg in enumerate(conv.get("messages", [])):
-        # Assign role: even index = user, odd index = assistant
-        role = "user" if idx % 2 == 0 else "assistant"
-        formatted_msg = dict(msg)  # copy to avoid mutating original
-        formatted_msg["role"] = role
-        daily_conversations[date]["messages"].append(formatted_msg)
+# conversations = flatten_conversations("./test/conversations.json")
+# daily_conversations = group_conversations_by_date(conversations)
 
-daily_summaries = {}
-progress_filename = f"daily_summaries_progress_{int(time.time())}.json"
-print(f"Total dates to summarize: {len(daily_conversations)}")
+# progress_filename = f"daily_summaries_progress_{int(time.time())}.json"
+# daily_summaries = summarize_conversations(daily_conversations, client, progress_filename)
+
+# print(f"Total dates to summarize: {len(daily_conversations)}")
+
+json_summaries = "daily_summaries_progress_1758074506.json"
+with open(json_summaries, "r", encoding="utf-8") as f:
+    new_entities = json.load(f)
+
+for session_date, session_data in new_entities.items():
+    session_transcript = session_data["summary"]
+    session_title = session_data["title"]
+    session_id = f"{session_date}-{session_title}"
+    memory.process_session(session_transcript, session_id)
+print("Session processed and staged.")

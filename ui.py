@@ -10,7 +10,7 @@ load_dotenv()
 
 if 'OPENAI_API_KEY' not in os.environ:
     raise RuntimeError("OPENAI_API_KEY environment variable is required. Please set it in your .env file.")
-model = os.getenv('MODEL_CHOICE', 'gpt-4o-mini')
+model = os.getenv('MODEL_CHOICE', 'gpt-5-nano')
 
 # exported_conversations = flatten_conversations("conversations.json")
 memory = DiffMemory("./assistant/", "anna", os.getenv('OPENAI_API_KEY'))
